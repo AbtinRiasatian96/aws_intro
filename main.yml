@@ -9,8 +9,8 @@ Parameters:
 
 Resources:
 
-  SecurityGroup
-    Type: AWS::EC2::SecurityGroup
+  SecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
     Properties:
       GroupDescription: !Sub 'Internal Security group for ${AWS::StackName}'
       SecurityGroupIngress:
@@ -25,7 +25,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Ref AWS::StackName
-
   InstanceRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -38,17 +37,15 @@ Resources:
               - "ec2.amazonaws.com"
           Action: sts:AssumeRole
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/CloudWatchFullAccessV2
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
       Tags:
         - Key: Name
           Value: !Ref AWS::StackName
-
   InstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
       Roles:
         - Ref: InstanceRole
-
   Instance:
     Type: AWS::EC2::Instance
     CreationPolicy: 
@@ -102,7 +99,7 @@ Resources:
             # Download latest code, unzip it into /home/ec2-user/app
             wget https://github.com/AbtinRiasatian96/aws_intro/archive/main.zip 
             unzip main.zip
-            mv aws_into-main app
+            mv aws_intro-main app
 
             # Create log directory
             mkdir -p /home/ec2-user/app/logs
@@ -118,10 +115,14 @@ Resources:
 
           # Signal to CloudFormation that the instance is ready
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --region ${AWS::Region} --resource Instance 
-
+          
       Tags:
         - Key: Name
           Value: !Ref AWS::StackName
 
-
 Outputs:
+  InstanceEndpoint:
+    Description: The DNS name for the created instance
+    Value: !Sub "http://${Instance.PublicDnsName}:8080" 
+    Export:
+      Name: InstanceEndpoint
